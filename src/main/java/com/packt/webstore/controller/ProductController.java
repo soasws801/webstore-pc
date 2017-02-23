@@ -1,8 +1,11 @@
 package com.packt.webstore.controller;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -136,6 +139,22 @@ public class ProductController {
 			return "invalidPromoCode";
 	}
 
+	@RequestMapping("/{category}/{price}") //set the mapping
+	public String filterProducts(
+			@MatrixVariable(pathVar = "price") Map<String, List<String>> priceRange, //we need matrix variable since price has two values, the high and low
+			@RequestParam("manufacturer") String manufacturer, //requestParam because URL will send a manufacturer value
+			@PathVariable("category") String category, Model model) { //pathVariable because above we copy how we wrote the parameter signature for /{category}
+		
+		//we need to instantiate variables for the min and max costs
+		BigDecimal lowPrice = new BigDecimal(priceRange.get("low").get(0));
+		BigDecimal highPrice = new BigDecimal(priceRange.get("high").get(0));
+
+		model.addAttribute("products", productService.filterProducts(lowPrice,
+				highPrice, manufacturer, category)); //model.addAttribute to store values into 'products'
+		//we also need to create the service to filter products using our specifications
+
+		return "products"; //we send our filtered results to the view
+	}
 
 
 }

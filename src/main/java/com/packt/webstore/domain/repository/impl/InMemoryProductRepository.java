@@ -2,6 +2,7 @@ package com.packt.webstore.domain.repository.impl;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,7 @@ public class InMemoryProductRepository implements ProductRepository{
 		laptop_dell.setUnitsInStock(1000);
 		
 		Product tablet_Nexus = new Product("P1236","Nexus 7", new BigDecimal(300));
-		tablet_Nexus.setDescription("Google Nexus 7 is the lightest 7 inch tablet With a quad-core Qualcomm Snapdragon™ S4 Pro processor");
+		tablet_Nexus.setDescription("Google Nexus 7 is the lightest 7 inch tablet With a quad-core Qualcomm Snapdragonï¿½ S4 Pro processor");
 		tablet_Nexus.setCategory("Tablet");
 		tablet_Nexus.setManufacturer("Google");
 		tablet_Nexus.setUnitsInStock(1000);
@@ -106,5 +107,44 @@ public class InMemoryProductRepository implements ProductRepository{
 	public void addProduct(Product product) {
 		   listOfProducts.add(product);
 	}
+
+	@Override
+	public List<Product> getProductsByManufacturer(String manufacturer) {
+		//this method is getProductsByCategory but re-written for manufacturer
+		List<Product> productsByManufacturer = new ArrayList<Product>();
+		
+		for(Product product: listOfProducts) {
+			if(manufacturer.equalsIgnoreCase(product.getManufacturer())){
+				productsByManufacturer.add(product);			
+			}
+		}
+		return productsByManufacturer;
+	}
+	
+	public List<Product> getProductsByPriceFilter(BigDecimal low, BigDecimal high) {
+		//again, this method is getProductsByCategory but re-written for comparing the two (high and low) values to the product list
+		List<Product> productsByPriceFilter = new ArrayList<Product>();
+
+		for (Product product : listOfProducts) {
+			if (low.compareTo(product.getUnitPrice()) <= 0 && high.compareTo(product.getUnitPrice()) >= 0) {
+				productsByPriceFilter.add(product);
+			}
+		}
+		return productsByPriceFilter;
+	}
+
+	public Set<Product> filterProducts(BigDecimal lowPrice,
+			BigDecimal highPrice, String manufacturer, String category) {
+		//We pick a metric to start comparison with
+		Set<Product> byPrice = new HashSet<Product>(getProductsByPriceFilter(lowPrice, highPrice));//We'll start with collecting a set based on the price range
+		Set<Product> byManufacturer = new HashSet<Product>(getProductsByManufacturer(manufacturer));//We'll create another set of products by manufacturer
+		Set<Product> byCategory = new HashSet<Product>(getProductsByCategory(category));//Last set we'll create based on category inputted
+
+		byPrice.retainAll(byManufacturer); //we take the set filtered by price and retain the products that match made by the selected manufcaturer
+		byPrice.retainAll(byCategory); //we take the set and flush out any products in the category
+
+		return byPrice; //we return the set to the request mapping
+	}
+
 
 }
